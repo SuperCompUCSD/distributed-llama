@@ -1,0 +1,119 @@
+📄 AddBos: 255
+📄 BosId: 128000 (<｜begin▁of▁sentence｜>)
+📄 EosId: 128001 (<｜end▁of▁sentence｜>) 128001 (<｜end▁of▁sentence｜>) 
+📄 RegularVocabSize: 128000
+📄 SpecialVocabSize: 256
+💡 Arch: Llama
+💡 HiddenAct: Silu
+💡 Dim: 4096
+💡 HeadDim: 128
+💡 QDim: 4096
+💡 KvDim: 1024
+💡 HiddenDim: 14336
+💡 VocabSize: 128256
+💡 nLayers: 32
+💡 nHeads: 32
+💡 nKvHeads: 8
+💡 OrigSeqLen: 131072
+💡 SeqLen: 4096
+💡 NormEpsilon: 0.000010
+💡 RopeType: Llama3.1
+💡 RopeTheta: 500000
+💡 RopeScaling: f=8.0, l=1.0, h=4.0, o=8192
+📀 RequiredMemory: 4600 MB
+⭕ Socket[0]: connecting to 192.168.111.52:9999 worker
+⭕ Socket[0]: connected
+⭕ Network is initialized
+🧠 CPU: neon fp16
+💿 Loading weights...
+💿 Loaded 17/32
+💿 Loaded 18/32
+💿 Loaded 19/32
+💿 Loaded 20/32
+💿 Loaded 21/32
+💿 Loaded 22/32
+💿 Loaded 23/32
+💿 Loaded 24/32
+💿 Loaded 25/32
+💿 Loaded 26/32
+💿 Loaded 27/32
+💿 Loaded 28/32
+💿 Loaded 29/32
+💿 Loaded 30/32
+💿 Loaded 31/32
+💿 Loaded 32/32
+💿 Weights loaded
+🚁 Network is in non-blocking mode
+Hello world
+🔷️ Eval  410 ms Sync  280 ms | Sent   576 kB Recv  1045 kB | (2 tokens)
+🔶 Pred  228 ms Sync  110 ms | Sent   288 kB Recv   522 kB | !
+🔶 Pred  225 ms Sync  109 ms | Sent   288 kB Recv   522 kB |  I
+🔶 Pred  213 ms Sync  113 ms | Sent   288 kB Recv   522 kB | 'm
+🔶 Pred  181 ms Sync 3460 ms | Sent   288 kB Recv   522 kB |  trying
+🔶 Pred  209 ms Sync 3349 ms | Sent   288 kB Recv   522 kB |  to
+🔶 Pred  223 ms Sync 3263 ms | Sent   288 kB Recv   522 kB |  figure
+🔶 Pred  220 ms Sync 3182 ms | Sent   288 kB Recv   522 kB |  out
+🔶 Pred  211 ms Sync 3339 ms | Sent   288 kB Recv   522 kB |  how
+🔶 Pred  211 ms Sync 3335 ms | Sent   288 kB Recv   522 kB |  to
+🔶 Pred  224 ms Sync  117 ms | Sent   288 kB Recv   522 kB |  create
+🔶 Pred  224 ms Sync  116 ms | Sent   288 kB Recv   522 kB |  a
+🔶 Pred  193 ms Sync 3148 ms | Sent   288 kB Recv   522 kB |  function
+🔶 Pred  223 ms Sync  117 ms | Sent   288 kB Recv   522 kB |  that
+🔶 Pred  209 ms Sync  118 ms | Sent   288 kB Recv   522 kB |  returns
+🔶 Pred  194 ms Sync 3439 ms | Sent   288 kB Recv   522 kB |  the
+🔶 Pred  220 ms Sync  118 ms | Sent   288 kB Recv   522 kB |  smallest
+🔶 Pred  230 ms Sync  114 ms | Sent   288 kB Recv   522 kB |  number
+🔶 Pred  216 ms Sync  118 ms | Sent   288 kB Recv   522 kB |  of
+🔶 Pred  218 ms Sync  118 ms | Sent   288 kB Recv   522 kB |  coins
+🔶 Pred  218 ms Sync 3247 ms | Sent   288 kB Recv   522 kB |  possible
+🔶 Pred  211 ms Sync 3339 ms | Sent   288 kB Recv   522 kB |  for
+🔶 Pred  234 ms Sync  117 ms | Sent   288 kB Recv   522 kB |  a
+🔶 Pred  212 ms Sync  115 ms | Sent   288 kB Recv   522 kB |  given
+🔶 Pred  203 ms Sync  119 ms | Sent   288 kB Recv   522 kB |  amount
+🔶 Pred  206 ms Sync  118 ms | Sent   288 kB Recv   522 kB | .
+🔶 Pred  224 ms Sync  112 ms | Sent   288 kB Recv   522 kB |  The
+🔶 Pred  214 ms Sync  116 ms | Sent   288 kB Recv   522 kB |  coins
+🔶 Pred  204 ms Sync  118 ms | Sent   288 kB Recv   522 kB |  available
+🔶 Pred  233 ms Sync  120 ms | Sent   288 kB Recv   522 kB |  are
+🔶 Pred  207 ms Sync  118 ms | Sent   288 kB Recv   522 kB |  penn
+🔶 Pred  203 ms Sync 3067 ms | Sent   288 kB Recv   522 kB | ies
+🔶 Pred  212 ms Sync 3338 ms | Sent   288 kB Recv   522 kB |  (
+🔶 Pred  234 ms Sync  120 ms | Sent   288 kB Recv   522 kB | 1
+🔶 Pred  225 ms Sync  111 ms | Sent   288 kB Recv   522 kB |  cent
+🔶 Pred  198 ms Sync  119 ms | Sent   288 kB Recv   522 kB | ),
+🔶 Pred  207 ms Sync  118 ms | Sent   288 kB Recv   522 kB |  nick
+🔶 Pred  203 ms Sync 3050 ms | Sent   288 kB Recv   522 kB | els
+🔶 Pred  227 ms Sync 3230 ms | Sent   288 kB Recv   522 kB |  (
+🔶 Pred  237 ms Sync 3057 ms | Sent   288 kB Recv   522 kB | 5
+🔶 Pred  237 ms Sync 3248 ms | Sent   288 kB Recv   522 kB |  cents
+🔶 Pred  237 ms Sync 3249 ms | Sent   288 kB Recv   522 kB | ),
+🔶 Pred  238 ms Sync  118 ms | Sent   288 kB Recv   522 kB |  d
+🔶 Pred  218 ms Sync  114 ms | Sent   288 kB Recv   522 kB | imes
+🔶 Pred  183 ms Sync 3450 ms | Sent   288 kB Recv   522 kB |  (
+🔶 Pred  212 ms Sync 3362 ms | Sent   288 kB Recv   522 kB | 10
+🔶 Pred  187 ms Sync 3447 ms | Sent   288 kB Recv   522 kB |  cents
+🔶 Pred  237 ms Sync 3249 ms | Sent   288 kB Recv   522 kB | ),
+🔶 Pred  224 ms Sync 3153 ms | Sent   288 kB Recv   522 kB |  and
+🔶 Pred  225 ms Sync 3153 ms | Sent   288 kB Recv   522 kB |  quarters
+🔶 Pred  238 ms Sync  117 ms | Sent   288 kB Recv   522 kB |  (
+🔶 Pred  210 ms Sync  116 ms | Sent   288 kB Recv   522 kB | 25
+🔶 Pred  217 ms Sync 3152 ms | Sent   288 kB Recv   522 kB |  cents
+🔶 Pred  224 ms Sync 3157 ms | Sent   288 kB Recv   522 kB | ).
+🔶 Pred  238 ms Sync 3228 ms | Sent   288 kB Recv   522 kB |  I
+🔶 Pred  225 ms Sync  118 ms | Sent   288 kB Recv   522 kB |  can
+🔶 Pred  208 ms Sync  118 ms | Sent   288 kB Recv   522 kB |  use
+🔶 Pred  208 ms Sync  118 ms | Sent   288 kB Recv   522 kB |  any
+🔶 Pred  201 ms Sync 3047 ms | Sent   288 kB Recv   522 kB |  combination
+🔶 Pred  225 ms Sync 3233 ms | Sent   288 kB Recv   522 kB |  of
+🔶 Pred  214 ms Sync 3324 ms | Sent   288 kB Recv   522 kB |  these
+🔶 Pred  224 ms Sync 3246 ms | Sent   288 kB Recv   522 kB |  coins
+🔶 Pred  203 ms Sync  119 ms | Sent   288 kB Recv   522 kB | ,
+
+Evaluation
+   nBatches: 32
+    nTokens: 2
+   tokens/s: 2.90 (345.30 ms/tok)
+Prediction
+    nTokens: 62
+   tokens/s: 0.54 (1850.81 ms/tok)
+⭕ Network is closed

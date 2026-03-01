@@ -1,0 +1,120 @@
+📄 AddBos: 255
+📄 BosId: 128000 (<｜begin▁of▁sentence｜>)
+📄 EosId: 128001 (<｜end▁of▁sentence｜>) 128001 (<｜end▁of▁sentence｜>) 
+📄 RegularVocabSize: 128000
+📄 SpecialVocabSize: 256
+💡 Arch: Llama
+💡 HiddenAct: Silu
+💡 Dim: 4096
+💡 HeadDim: 128
+💡 QDim: 4096
+💡 KvDim: 1024
+💡 HiddenDim: 14336
+💡 VocabSize: 128256
+💡 nLayers: 32
+💡 nHeads: 32
+💡 nKvHeads: 8
+💡 OrigSeqLen: 131072
+💡 SeqLen: 4096
+💡 NormEpsilon: 0.000010
+💡 RopeType: Llama3.1
+💡 RopeTheta: 500000
+💡 RopeScaling: f=8.0, l=1.0, h=4.0, o=8192
+📀 RequiredMemory: 4600 MB
+⭕ Socket[0]: connecting to 192.168.111.53:9999 worker
+⭕ Socket[0]: connected
+⭕ Network is initialized
+🧠 CPU: neon fp16
+💿 Loading weights...
+💿 Loaded 18/32
+💿 Loaded 19/32
+💿 Loaded 20/32
+💿 Loaded 21/32
+💿 Loaded 22/32
+💿 Loaded 23/32
+💿 Loaded 24/32
+💿 Loaded 25/32
+💿 Loaded 26/32
+💿 Loaded 27/32
+💿 Loaded 28/32
+💿 Loaded 29/32
+💿 Loaded 30/32
+💿 Loaded 31/32
+💿 Loaded 32/32
+💿 Weights loaded
+🚁 Network is in non-blocking mode
+Hello world
+🔷️ Eval  447 ms Sync  213 ms | Sent   576 kB Recv  1045 kB | (2 tokens)
+🔶 Pred  217 ms Sync  117 ms | Sent   288 kB Recv   522 kB | !
+🔶 Pred  185 ms Sync 3453 ms | Sent   288 kB Recv   522 kB |  I
+🔶 Pred  224 ms Sync 3274 ms | Sent   288 kB Recv   522 kB | 'm
+🔶 Pred  234 ms Sync  117 ms | Sent   288 kB Recv   522 kB |  a
+🔶 Pred  201 ms Sync  119 ms | Sent   288 kB Recv   522 kB |  bit
+🔶 Pred  182 ms Sync 3456 ms | Sent   288 kB Recv   522 kB |  nervous
+🔶 Pred  202 ms Sync 3408 ms | Sent   288 kB Recv   522 kB |  about
+🔶 Pred  212 ms Sync 3326 ms | Sent   288 kB Recv   522 kB |  starting
+🔶 Pred  209 ms Sync 3341 ms | Sent   288 kB Recv   522 kB |  this
+🔶 Pred  192 ms Sync 3438 ms | Sent   288 kB Recv   522 kB | ,
+🔶 Pred  234 ms Sync  118 ms | Sent   288 kB Recv   522 kB |  but
+🔶 Pred  224 ms Sync  112 ms | Sent   288 kB Recv   522 kB |  I
+🔶 Pred  214 ms Sync 3168 ms | Sent   288 kB Recv   522 kB |  know
+🔶 Pred  227 ms Sync 3235 ms | Sent   288 kB Recv   522 kB |  I
+🔶 Pred  214 ms Sync  119 ms | Sent   288 kB Recv   522 kB |  need
+🔶 Pred  184 ms Sync 3450 ms | Sent   288 kB Recv   522 kB |  to
+🔶 Pred  234 ms Sync  119 ms | Sent   288 kB Recv   522 kB |  take
+🔶 Pred  214 ms Sync  116 ms | Sent   288 kB Recv   522 kB |  the
+🔶 Pred  225 ms Sync  112 ms | Sent   288 kB Recv   522 kB |  first
+🔶 Pred  209 ms Sync  116 ms | Sent   288 kB Recv   522 kB |  step
+🔶 Pred  219 ms Sync 3134 ms | Sent   288 kB Recv   522 kB | .
+🔶 Pred  215 ms Sync 2903 ms | Sent   288 kB Recv   522 kB |  Let
+🔶 Pred  222 ms Sync  118 ms | Sent   288 kB Recv   522 kB |  me
+🔶 Pred  221 ms Sync  118 ms | Sent   288 kB Recv   522 kB |  think
+🔶 Pred  211 ms Sync 3363 ms | Sent   288 kB Recv   522 kB |  about
+🔶 Pred  233 ms Sync  126 ms | Sent   288 kB Recv   522 kB |  how
+🔶 Pred  214 ms Sync  116 ms | Sent   288 kB Recv   522 kB |  to
+🔶 Pred  183 ms Sync 3451 ms | Sent   288 kB Recv   522 kB |  approach
+🔶 Pred  212 ms Sync 3321 ms | Sent   288 kB Recv   522 kB |  this
+🔶 Pred  226 ms Sync 2948 ms | Sent   288 kB Recv   522 kB | .
+
+
+🔶 Pred  210 ms Sync 3336 ms | Sent   288 kB Recv   522 kB | First
+🔶 Pred  212 ms Sync 3338 ms | Sent   288 kB Recv   522 kB | ,
+🔶 Pred  225 ms Sync  124 ms | Sent   288 kB Recv   522 kB |  I
+🔶 Pred  184 ms Sync 3454 ms | Sent   288 kB Recv   522 kB |  need
+🔶 Pred  225 ms Sync  118 ms | Sent   288 kB Recv   522 kB |  to
+🔶 Pred  205 ms Sync 3351 ms | Sent   288 kB Recv   522 kB |  understand
+🔶 Pred  208 ms Sync 2626 ms | Sent   288 kB Recv   522 kB |  what
+🔶 Pred  226 ms Sync  119 ms | Sent   288 kB Recv   522 kB |  the
+🔶 Pred  224 ms Sync  119 ms | Sent   288 kB Recv   522 kB |  problem
+🔶 Pred  235 ms Sync  117 ms | Sent   288 kB Recv   522 kB |  is
+🔶 Pred  220 ms Sync  120 ms | Sent   288 kB Recv   522 kB |  asking
+🔶 Pred  214 ms Sync  116 ms | Sent   288 kB Recv   522 kB |  for
+🔶 Pred  214 ms Sync  116 ms | Sent   288 kB Recv   522 kB | .
+🔶 Pred  225 ms Sync  113 ms | Sent   288 kB Recv   522 kB |  Wait
+🔶 Pred  208 ms Sync  118 ms | Sent   288 kB Recv   522 kB | ,
+🔶 Pred  216 ms Sync  116 ms | Sent   288 kB Recv   522 kB |  the
+🔶 Pred  204 ms Sync 3161 ms | Sent   288 kB Recv   522 kB |  problem
+🔶 Pred  239 ms Sync 3227 ms | Sent   288 kB Recv   522 kB |  is
+🔶 Pred  229 ms Sync 3241 ms | Sent   288 kB Recv   522 kB |  "
+🔶 Pred  226 ms Sync  119 ms | Sent   288 kB Recv   522 kB | Write
+🔶 Pred  221 ms Sync  119 ms | Sent   288 kB Recv   522 kB |  a
+🔶 Pred  225 ms Sync  119 ms | Sent   288 kB Recv   522 kB |  Python
+🔶 Pred  186 ms Sync 3448 ms | Sent   288 kB Recv   522 kB |  program
+🔶 Pred  214 ms Sync 3327 ms | Sent   288 kB Recv   522 kB |  that
+🔶 Pred  239 ms Sync 3191 ms | Sent   288 kB Recv   522 kB | ...",
+🔶 Pred  226 ms Sync 3236 ms | Sent   288 kB Recv   522 kB |  but
+🔶 Pred  205 ms Sync 2665 ms | Sent   288 kB Recv   522 kB |  I
+🔶 Pred  226 ms Sync 2852 ms | Sent   288 kB Recv   522 kB |  don
+🔶 Pred  213 ms Sync 3361 ms | Sent   288 kB Recv   522 kB | 't
+🔶 Pred  236 ms Sync 3242 ms | Sent   288 kB Recv   522 kB |  see
+🔶 Pred  223 ms Sync  119 ms | Sent   288 kB Recv   522 kB |  the
+🔶 Pred  187 ms Sync 3447 ms | Sent   288 kB Recv   522 kB |  exact
+
+Evaluation
+   nBatches: 32
+    nTokens: 2
+   tokens/s: 3.03 (330.35 ms/tok)
+Prediction
+    nTokens: 62
+   tokens/s: 0.50 (1999.88 ms/tok)
+⭕ Network is closed
