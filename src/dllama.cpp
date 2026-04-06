@@ -64,6 +64,7 @@ static void inference(AppInferenceContext *context) {
             sentBytes / 1024,
             recvBytes / 1024,
             batchSize);
+        context->executor->printLastForwardHotspots(3);
         evalTotalTime += evalTime + syncTime;
     }
 
@@ -93,9 +94,12 @@ static void inference(AppInferenceContext *context) {
             sentBytes / 1024,
             recvBytes / 1024,
             piece == nullptr ? "~" : piece);
+        context->executor->printLastForwardHotspots(3);
         fflush(stdout);
         predTotalTime += predTime + syncTime;
     }
+
+    context->executor->printTimingDistributions();
 
     NnUint nEvalTokens = nInputTokens - 1;
     NnUint nPredTokens = pos - nEvalTokens;

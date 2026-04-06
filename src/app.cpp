@@ -40,6 +40,7 @@ AppCliArgs AppCliArgs::parse(int argc, char* *argv, bool requireMode) {
     args.temperature = 0.8f;
     args.topp = 0.9f;
     args.steps = 0;
+    args.benchmark = false;
     args.seed = (unsigned long long)time(nullptr);
     args.chatTemplateType = TEMPLATE_UNKNOWN;
     args.maxSeqLen = 0;
