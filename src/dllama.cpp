@@ -9,6 +9,53 @@
 #include "app.hpp"
 #include <stdexcept>
 #include <cmath>
+#include <string>
+#include <sys/stat.h>
+#include <sys/types.h>
+
+static bool ensureDir(const char *path) {
+    struct stat st;
+    if (stat(path, &st) == 0)
+        return S_ISDIR(st.st_mode);
+    return mkdir(path, 0755) == 0;
+}
+
+static std::string basenameFromPath(const char *path) {
+    if (path == nullptr || path[0] == '\0')
+        return "unknown";
+
+    const char *lastSlash = std::strrchr(path, '/');
+    const char *name = lastSlash == nullptr ? path : (lastSlash + 1);
+    return std::string(name);
+}
+
+static std::string sanitizeLabel(const std::string &value) {
+    std::string out;
+    out.reserve(value.size());
+    for (size_t i = 0; i < value.size(); i++) {
+        char c = value[i];
+        bool isDigit = c >= '0' && c <= '9';
+        bool isLower = c >= 'a' && c <= 'z';
+        bool isUpper = c >= 'A' && c <= 'Z';
+        if (isDigit || isLower || isUpper || c == '-' || c == '_')
+            out.push_back(c);
+        else
+            out.push_back('_');
+    }
+    if (out.empty())
+        return "unknown";
+    return out;
+}
+
+static const char *floatTypeToLabel(NnFloatType syncType) {
+    switch (syncType) {
+        case F_32: return "f32";
+        case F_16: return "f16";
+        case F_Q40: return "q40";
+        case F_Q80: return "q80";
+        default: return "unknown";
+    }
+}
 
 static void inference(AppInferenceContext *context) {
     if (context->args->prompt == nullptr)
@@ -32,6 +79,7 @@ static void inference(AppInferenceContext *context) {
     NnSize recvBytes = 0;
     NnUint evalTotalTime = 0;
     NnUint predTotalTime = 0;
+    std::chrono::steady_clock::time_point runStart = std::chrono::steady_clock::now();
 
     int token = inputTokens[pos];
     printf("%s\n", context->args->prompt);
@@ -117,6 +165,70 @@ static void inference(AppInferenceContext *context) {
     printf("   tokens/s: %3.2f (%3.2f ms/tok)\n",
         (nPredTokens * 1000) / predTotalTimeMs,
         predTotalTimeMs / ((float) nPredTokens));
+
+    // Persist only end-of-run summaries to a dedicated run folder.
+    std::time_t now = std::time(nullptr);
+    std::tm localTime = *std::localtime(&now);
+
+    char timestamp[32];
+    std::strftime(timestamp, sizeof(timestamp), "%Y%m%d-%H%M%S", &localTime);
+
+    std::string modelName = sanitizeLabel(basenameFromPath(context->args->modelPath));
+    std::string runLabel = std::string("run-") + timestamp +
+        "_m-" + modelName +
+        "_t-" + std::to_string(context->args->nThreads) +
+        "_b-" + std::to_string(context->args->nBatches) +
+        "_w-" + std::to_string(context->args->nWorkers) +
+        "_s-" + floatTypeToLabel(context->args->syncType);
+
+    std::string logsRoot = "logs";
+    std::string runDir = logsRoot + "/" + runLabel;
+
+    if (ensureDir(logsRoot.c_str()) && ensureDir(runDir.c_str())) {
+        std::string summaryName = std::string("summary_") +
+            "t" + std::to_string(context->args->nThreads) +
+            "_b" + std::to_string(context->args->nBatches) +
+            "_w" + std::to_string(context->args->nWorkers) +
+            "_sync-" + floatTypeToLabel(context->args->syncType) +
+            "_" + timestamp + ".log";
+        std::string summaryPath = runDir + "/" + summaryName;
+
+        FILE *fp = std::fopen(summaryPath.c_str(), "w");
+        if (fp != nullptr) {
+            auto runDurationUs = std::chrono::duration_cast<std::chrono::microseconds>(
+                std::chrono::steady_clock::now() - runStart
+            ).count();
+            float runDurationMs = runDurationUs / 1000.0f;
+
+            std::fprintf(fp, "run_timestamp=%s\n", timestamp);
+            std::fprintf(fp, "mode=inference\n");
+            std::fprintf(fp, "model=%s\n", context->args->modelPath == nullptr ? "" : context->args->modelPath);
+            std::fprintf(fp, "tokenizer=%s\n", context->args->tokenizerPath == nullptr ? "" : context->args->tokenizerPath);
+            std::fprintf(fp, "threads=%u\n", context->args->nThreads);
+            std::fprintf(fp, "batches=%u\n", context->args->nBatches);
+            std::fprintf(fp, "workers=%u\n", context->args->nWorkers);
+            std::fprintf(fp, "steps=%u\n", context->args->steps);
+            std::fprintf(fp, "sync_type=%s\n", floatTypeToLabel(context->args->syncType));
+            std::fprintf(fp, "eval_tokens=%u\n", nEvalTokens);
+            std::fprintf(fp, "pred_tokens=%u\n", nPredTokens);
+            std::fprintf(fp, "eval_total_ms=%.2f\n", evalTotalTimeMs);
+            std::fprintf(fp, "pred_total_ms=%.2f\n", predTotalTimeMs);
+            std::fprintf(fp, "eval_tokens_per_s=%.2f\n", (nEvalTokens * 1000) / evalTotalTimeMs);
+            std::fprintf(fp, "pred_tokens_per_s=%.2f\n", (nPredTokens * 1000) / predTotalTimeMs);
+            std::fprintf(fp, "eval_ms_per_tok=%.2f\n", evalTotalTimeMs / ((float)nEvalTokens));
+            std::fprintf(fp, "pred_ms_per_tok=%.2f\n", predTotalTimeMs / ((float)nPredTokens));
+            std::fprintf(fp, "sent_kb=%zu\n", sentBytes / 1024);
+            std::fprintf(fp, "recv_kb=%zu\n", recvBytes / 1024);
+            std::fprintf(fp, "run_total_ms=%.2f\n", runDurationMs);
+
+            std::fclose(fp);
+            std::printf("📝 Run summary saved: %s\n", summaryPath.c_str());
+        } else {
+            std::printf("⚠️ Could not write run summary file: %s\n", summaryPath.c_str());
+        }
+    } else {
+        std::printf("⚠️ Could not create logs directory for run summaries\n");
+    }
 }
 
 static NnUint readStdin(const char *guide, char *buffer, NnUint size) {

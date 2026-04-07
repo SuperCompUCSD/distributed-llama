@@ -12,6 +12,7 @@ typedef SSIZE_T ssize_t;
 #endif
 #include "nn-network.hpp"
 #include <cassert>
+#include <chrono>
 #include <cstring>
 #include <stdexcept>
 #include <vector>
@@ -21,7 +22,35 @@ typedef SSIZE_T ssize_t;
 #define SOCKET_LAST_ERROR strerror(errno)
 
 #define ACK 23571114
-#define MAX_CHUNK_SIZE 4096
+#define MAX_CHUNK_SIZE 262144
+#define SLOW_SYNC_THRESHOLD_US 10000
+#define VERY_SLOW_SYNC_THRESHOLD_US 50000
+
+typedef struct {
+    NnUint nodeIndex;
+    NnUint token;
+    NnUint layer;
+    NnUint reserved;
+    NnUint enterUs;
+    NnUint sendUs;
+    NnUint recvUs;
+    NnUint releaseUs;
+    NnUint firstRecvUs;
+} NnSyncDiagPacket;
+
+typedef struct {
+    NnUint enterUs;
+    NnUint sendUs;
+    NnUint recvUs;
+    NnUint releaseUs;
+    NnUint firstRecvUs;
+} NnSyncDiagPhase;
+
+static inline NnUint nowMicroseconds() {
+    return (NnUint)std::chrono::duration_cast<std::chrono::microseconds>(
+        std::chrono::steady_clock::now().time_since_epoch()
+    ).count();
+}
 
 static inline bool isEagainError() {
     #ifdef _WIN32
@@ -565,7 +594,7 @@ static void syncWithRoot(NnNetwork *network, NnByte nodeIndex, NnByte *buffer, N
     }
 }
 
-static void syncNodeSlices(bool onlyFromWorkerToRoot, NnNetwork *network, NnUint nodeIndex, NnUint nNodes, NnByte *buffer, NnSize nBytes, NnUint nThreads, NnUint threadIndex) {
+static void syncNodeSlices(bool onlyFromWorkerToRoot, NnNetwork *network, NnUint nodeIndex, NnUint nNodes, NnByte *buffer, NnSize nBytes, NnUint nThreads, NnUint threadIndex, NnSyncDiagPhase *phase) {
     bool isWorker = nodeIndex != 0;
     NnUint nSockets = onlyFromWorkerToRoot && isWorker ? 1 : network->nSockets;
     NnUint nSocketsPerThread = nSockets / nThreads + (nSockets % nThreads > threadIndex ? 1 : 0);
@@ -584,9 +613,12 @@ static void syncNodeSlices(bool onlyFromWorkerToRoot, NnNetwork *network, NnUint
             ios[i].size = sliceBytes;
         }
         network->writeMany(nSocketsPerThread, &ios[0]);
+        if (phase != nullptr)
+            phase->sendUs = nowMicroseconds();
     }
 
     if (!onlyFromWorkerToRoot || !isWorker) {
+        NnUint recvStartUs = nowMicroseconds();
         for (NnUint i = 0; i < nSocketsPerThread; i++) {
             NnUint socketIndex = threadIndex + i * nThreads;
             NnUint sliceIndex = socketIndex >= nodeIndex ? socketIndex + 1 : socketIndex;
@@ -596,6 +628,10 @@ static void syncNodeSlices(bool onlyFromWorkerToRoot, NnNetwork *network, NnUint
             ios[i].size = sliceBytes;
         }
         network->readMany(nSocketsPerThread, &ios[0]);
+        if (phase != nullptr) {
+            phase->recvUs = nowMicroseconds();
+            phase->firstRecvUs = recvStartUs;
+        }
     }
 }
 
@@ -604,10 +640,48 @@ NnNetworkNodeSynchronizer::NnNetworkNodeSynchronizer(NnNetwork *network, NnNetEx
     this->execution = execution;
     this->netConfig = netConfig;
     this->nodeConfig = nodeConfig;
+    this->positionPipeIndex = -1;
+    for (NnUint i = 0; i < netConfig->nPipes; i++) {
+        if (std::strcmp(netConfig->pipes[i].name, "POS") == 0) {
+            this->positionPipeIndex = i;
+            break;
+        }
+    }
+}
+
+static std::string formatSyncLabel(NnSegmentConfig *segmentConfig) {
+    if (segmentConfig->nOps > 0) {
+        NnOpConfig *opConfig = &segmentConfig->ops[0];
+        if (std::strncmp(opConfig->name, "block_", 6) == 0)
+            return "L" + std::to_string(opConfig->index) + ":" + std::string(opConfig->name);
+        return std::string(opConfig->name);
+    }
+    return "segment";
+}
+
+static NnUint parseLayerFromLabel(const std::string &label) {
+    if (label.size() < 2 || label[0] != 'L')
+        return 0;
+    size_t colon = label.find(':');
+    if (colon == std::string::npos || colon < 2)
+        return 0;
+    return (NnUint)std::atoi(label.substr(1, colon - 1).c_str());
+}
+
+static NnUint packetDurationUs(const NnSyncDiagPacket &p) {
+    return p.releaseUs >= p.enterUs ? p.releaseUs - p.enterUs : 0;
 }
 
 void NnNetworkNodeSynchronizer::sync(NnUint segmentIndex, NnUint nThreads, NnUint threadIndex) {
     NnSegmentConfig *segmentConfig = &nodeConfig->segments[segmentIndex];
+    std::string syncLabel = formatSyncLabel(segmentConfig);
+    bool isRoot = nodeConfig->nodeIndex == 0;
+    bool canSampleDiagnostics = threadIndex == 0;
+    
+    static int syncCallCount = 0;
+    if (++syncCallCount % 500 == 0 && isRoot) {
+        fprintf(stderr, "DEBUG: sync called, segment=%d, label=%s, nSyncs=%u\n", segmentIndex, syncLabel.c_str(), segmentConfig->nSyncs);
+    }
 
     for (NnUint syncIndex = 0; syncIndex < segmentConfig->nSyncs; syncIndex++) {
         NnSyncConfig *syncConfig = &segmentConfig->syncs[syncIndex];
@@ -617,16 +691,46 @@ void NnNetworkNodeSynchronizer::sync(NnUint segmentIndex, NnUint nThreads, NnUin
 
         for (NnUint batchIndex = 0; batchIndex < execution->batchSize; batchIndex++) {
             NnByte *pipeBatch = &pipe[batchIndex * batchBytes];
+            NnUint token = 0;
+            if (positionPipeIndex >= 0) {
+                float *positionPipe = (float *)execution->pipes[positionPipeIndex];
+                token = (NnUint)positionPipe[batchIndex];
+            }
+            NnSyncDiagPhase phase = {0, 0, 0, 0, 0};
+            if (canSampleDiagnostics)
+                phase.enterUs = nowMicroseconds();
 
             if (syncConfig->syncType == SYNC_WITH_ROOT) {
                 syncWithRoot(network, nodeConfig->nodeIndex, pipeBatch, batchBytes, nThreads, threadIndex);
             } else if (syncConfig->syncType == SYNC_NODE_SLICES) {
-                syncNodeSlices(false, network, nodeConfig->nodeIndex, netConfig->nNodes, pipeBatch, batchBytes, nThreads, threadIndex);
+                syncNodeSlices(false, network, nodeConfig->nodeIndex, netConfig->nNodes, pipeBatch, batchBytes, nThreads, threadIndex, canSampleDiagnostics ? &phase : nullptr);
             } else if (syncConfig->syncType == SYNC_NODE_SLICES_EXCEPT_ROOT) {
-                syncNodeSlices(true, network, nodeConfig->nodeIndex, netConfig->nNodes, pipeBatch, batchBytes, nThreads, threadIndex);
+                syncNodeSlices(true, network, nodeConfig->nodeIndex, netConfig->nNodes, pipeBatch, batchBytes, nThreads, threadIndex, canSampleDiagnostics ? &phase : nullptr);
             } else {
                 throw std::invalid_argument("Unknown sync type");
             }
+
+            if (!canSampleDiagnostics)
+                continue;
+
+            phase.releaseUs = nowMicroseconds();
+            if (phase.sendUs == 0)
+                phase.sendUs = phase.enterUs;
+            if (phase.recvUs == 0)
+                phase.recvUs = phase.sendUs;
+            if (phase.firstRecvUs == 0)
+                phase.firstRecvUs = phase.recvUs;
+
+            // if (syncConfig->syncType == SYNC_NODE_SLICES || syncConfig->syncType == SYNC_NODE_SLICES_EXCEPT_ROOT) {
+            //     NnUint rootTotalUs = phase.releaseUs > phase.enterUs ? phase.releaseUs - phase.enterUs : 0;
+            //     NnUint waitUs = phase.firstRecvUs > phase.enterUs ? phase.firstRecvUs - phase.enterUs : 0;
+            //     NnUint mergeUs = phase.recvUs > phase.firstRecvUs ? phase.recvUs - phase.firstRecvUs : 0;
+                
+            //     fprintf(stdout, "🧭 ROOT_SLOW label=%s token=%u total=%.2fms wait=%.2fms merge=%.2fms type=%d batch=%u\n",
+            //         syncLabel.c_str(), token, rootTotalUs / 1000.0f, waitUs / 1000.0f, mergeUs / 1000.0f, 
+            //         syncConfig->syncType, batchIndex);
+            //     fflush(stdout);
+            // }
         }
     }
 }
