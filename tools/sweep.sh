@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -uo pipefail
 
 usage() {
   cat <<'EOF'
@@ -134,7 +134,14 @@ trim_value() {
 make_prompt() {
   local words="$1"
   local token_word="$2"
-  yes "$token_word" | head -n "$words" | tr '\n' ' ' | sed 's/[[:space:]]*$//'
+  local result
+  result=$(for ((i=0; i<words; i++)); do printf '%s ' "$token_word"; done | sed 's/[[:space:]]*$//')
+  local exit_code=$?
+  if [[ $exit_code -ne 0 ]]; then
+    echo "ERROR: make_prompt failed with exit code $exit_code" >&2
+    return $exit_code
+  fi
+  printf '%s' "$result"
 }
 
 csv_escape() {
