@@ -22,7 +22,9 @@ typedef SSIZE_T ssize_t;
 #define SOCKET_LAST_ERROR strerror(errno)
 
 #define ACK 23571114
+#ifndef MAX_CHUNK_SIZE
 #define MAX_CHUNK_SIZE 262144
+#endif
 #define SLOW_SYNC_THRESHOLD_US 10000
 #define VERY_SLOW_SYNC_THRESHOLD_US 50000
 

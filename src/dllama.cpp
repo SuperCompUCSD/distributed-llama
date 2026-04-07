@@ -167,29 +167,36 @@ static void inference(AppInferenceContext *context) {
         predTotalTimeMs / ((float) nPredTokens));
 
     // Persist only end-of-run summaries to a dedicated run folder.
-    std::time_t now = std::time(nullptr);
-    std::tm localTime = *std::localtime(&now);
+    auto now = std::chrono::system_clock::now();
+    std::time_t nowTimeT = std::chrono::system_clock::to_time_t(now);
+    std::tm localTime = *std::localtime(&nowTimeT);
+    auto msPart = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
 
-    char timestamp[32];
+    char timestamp[40];
     std::strftime(timestamp, sizeof(timestamp), "%Y%m%d-%H%M%S", &localTime);
+    std::snprintf(timestamp + std::strlen(timestamp), sizeof(timestamp) - std::strlen(timestamp), "-%03lld", (long long)msPart.count());
 
     std::string modelName = sanitizeLabel(basenameFromPath(context->args->modelPath));
     std::string runLabel = std::string("run-") + timestamp +
         "_m-" + modelName +
+        "_seq-" + std::to_string(context->header->seqLen) +
         "_t-" + std::to_string(context->args->nThreads) +
         "_b-" + std::to_string(context->args->nBatches) +
         "_w-" + std::to_string(context->args->nWorkers) +
-        "_s-" + floatTypeToLabel(context->args->syncType);
+        "_s-" + floatTypeToLabel(context->args->syncType) +
+        "_chunk-" + std::to_string(MAX_CHUNK_SIZE);
 
     std::string logsRoot = "logs";
     std::string runDir = logsRoot + "/" + runLabel;
 
     if (ensureDir(logsRoot.c_str()) && ensureDir(runDir.c_str())) {
         std::string summaryName = std::string("summary_") +
+            "seq" + std::to_string(context->header->seqLen) +
             "t" + std::to_string(context->args->nThreads) +
             "_b" + std::to_string(context->args->nBatches) +
             "_w" + std::to_string(context->args->nWorkers) +
             "_sync-" + floatTypeToLabel(context->args->syncType) +
+            "_chunk-" + std::to_string(MAX_CHUNK_SIZE) +
             "_" + timestamp + ".log";
         std::string summaryPath = runDir + "/" + summaryName;
 
@@ -208,7 +215,10 @@ static void inference(AppInferenceContext *context) {
             std::fprintf(fp, "batches=%u\n", context->args->nBatches);
             std::fprintf(fp, "workers=%u\n", context->args->nWorkers);
             std::fprintf(fp, "steps=%u\n", context->args->steps);
+            std::fprintf(fp, "seq_len=%u\n", context->header->seqLen);
+            std::fprintf(fp, "chunk_size=%u\n", (unsigned int)MAX_CHUNK_SIZE);
             std::fprintf(fp, "sync_type=%s\n", floatTypeToLabel(context->args->syncType));
+            std::fprintf(fp, "prompt_tokens=%u\n", nEvalTokens);
             std::fprintf(fp, "eval_tokens=%u\n", nEvalTokens);
             std::fprintf(fp, "pred_tokens=%u\n", nPredTokens);
             std::fprintf(fp, "eval_total_ms=%.2f\n", evalTotalTimeMs);
