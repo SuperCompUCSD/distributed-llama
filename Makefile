@@ -4,7 +4,7 @@ MAX_CHUNK_SIZE ?= 262144
 CXXFLAGS += -DMAX_CHUNK_SIZE=$(MAX_CHUNK_SIZE)
 
 ifndef TERMUX_VERSION
-	CXXFLAGS += -march=armv8.2-a+dotprod+fp16 -mtune=cortex-a76 -O3 -ffast-math -funroll-loops -fprefetch-loop-arrays -fno-stack-protector -flto
+	CXXFLAGS += -mcpu=cortex-a76+fp16+dotprod -Ofast -flto -fomit-frame-pointer
 endif
 
 ifdef DEBUG
