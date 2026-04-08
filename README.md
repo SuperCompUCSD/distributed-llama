@@ -42,7 +42,7 @@ To ensure stable execution with hardware dot-product support enabled, the root n
 
 ### Configuration Sweeps
 
-As one of the final stages of optimization, controlled sweeps were run across key runtime parameters to identify stable and high-performing operating points. These sweeps covered:
+As one of the final stages of optimization, controlled sweeps were run across key runtime parameters to identify stable and high-performing operating points using `/tools/sweep.sh`. These sweeps covered:
 
 - `nthreads`
 - `max_seq_len`
