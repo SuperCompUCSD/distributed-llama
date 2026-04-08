@@ -1,8 +1,10 @@
 CXX = g++
 CXXFLAGS = -std=c++11 -Werror -Wformat -Werror=format-security 
+MAX_CHUNK_SIZE ?= 262144
+CXXFLAGS += -DMAX_CHUNK_SIZE=$(MAX_CHUNK_SIZE)
 
 ifndef TERMUX_VERSION
-	CXXFLAGS += -march=native -mtune=native
+	CXXFLAGS += -mcpu=cortex-a76+fp16+dotprod -Ofast -flto -fomit-frame-pointer
 endif
 
 ifdef DEBUG

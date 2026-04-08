@@ -84,6 +84,8 @@ public:
 typedef struct {
     AppCliArgs *args;
     LlmHeader *header;
+    NnNodeConfig *nodeConfig;
+    NnUint nThreads;
     RootLlmInference *inference;
     Tokenizer *tokenizer;
     Sampler *sampler;

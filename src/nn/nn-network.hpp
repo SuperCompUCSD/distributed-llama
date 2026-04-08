@@ -75,6 +75,7 @@ private:
     NnNetExecution *execution;
     NnNetConfig *netConfig;
     NnNodeConfig *nodeConfig;
+    int positionPipeIndex;
 public:
     NnNetworkNodeSynchronizer(NnNetwork *network, NnNetExecution *execution, NnNetConfig *netConfig, NnNodeConfig *nodeConfig);
     ~NnNetworkNodeSynchronizer() override {};

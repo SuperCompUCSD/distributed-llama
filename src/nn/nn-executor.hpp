@@ -4,6 +4,7 @@
 #include "nn-core.hpp"
 #include <atomic>
 #include <vector>
+#include <string>
 #include <stdexcept>
 #include "pthread.h"
 
@@ -78,6 +79,12 @@ typedef struct {
     NnUint batchSize;
     Timer *timer;
     NnUint totalTime[N_STEP_TYPES];
+    NnUint *lastStepTime;
+    NnUint *stepCount;
+    NnUint *stepTotalTime;
+    NnUint *stepMinTime;
+    NnUint *stepMaxTime;
+    std::vector<NnUint> *stepSamples;
 } NnExecutorContext;
 
 typedef struct {
@@ -97,14 +104,28 @@ private:
     NnNodeConfig *nodeConfig;
     std::vector<std::unique_ptr<NnDeviceSegment>> segments;
     std::vector<NnExecutorStep> steps;
+    std::vector<std::string> stepLabels;
+    std::vector<NnUint> lastStepTime;
+    std::vector<NnUint> stepCount;
+    std::vector<NnUint> stepTotalTime;
+    std::vector<NnUint> stepMinTime;
+    std::vector<NnUint> stepMaxTime;
+    std::vector<std::vector<NnUint>> stepSamples;
+    NnUint nForwards;
+    bool profilingEnabled;
     NnExecutorThread *threads;
     NnExecutorContext context;
+private:
+    std::string formatStepLabel(const NnExecutorStep &step) const;
+    void printStepDistribution(const char *title, bool includeSync) const;
 public:
     NnExecutor(NnNetConfig *netConfig, NnNodeConfig *nodeConfig, std::vector<NnExecutorDevice> *device, NnNetExecution *netExecution, NnNodeSynchronizer *synchronizer, bool benchmark);
     ~NnExecutor();
     void loadWeight(const char *name, NnUint opIndex, NnSize offset, NnSize nBytes, NnByte *weight);
     void forward();
     NnUint getTotalTime(NnExecutorStepType type);
+    void printLastForwardHotspots(NnUint topK) const;
+    void printTimingDistributions() const;
 };
 
 #endif

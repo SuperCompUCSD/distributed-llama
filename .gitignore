@@ -1,5 +1,7 @@
 .vscode/settings.json
 
+logs/
+
 *.o
 *.0
 *.dSYM
