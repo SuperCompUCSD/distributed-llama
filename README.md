@@ -68,4 +68,4 @@ These experiments helped establish the preferred deployment regime for the curre
 
 ### Final Outcome
 
-The retained attempts of this optimization cycle were expanded profiling, improved structured benchmarking, a configurable network chunk size with 256 KB selected as the preferred setting, hardware-targeted build configuration, and a root-node CPU frequency cap for stability.
+The retained attempts of this optimization cycle were expanded profiling, improved structured benchmarking, a configurable network chunk size with 256 KB selected as the preferred setting, n-threads set to target performance cores, hardware-targeted build configuration, and a root-node CPU frequency cap for stability.
