@@ -18,6 +18,8 @@ Runtime instrumentation was expanded to improve diagnosis and benchmarking acros
 
 Profiling showed that the dominant bottleneck was not local layer computation, but synchronization overhead. The largest latency spikes occurred in the synchronization path, particularly in a late-stage segment around `seg[65]`, where worker threads spent substantial time blocked at synchronization barriers. Root-side merge computation was not the primary limiter; instead, end-to-end latency was driven mainly by imbalance and waiting during inter-thread and inter-node synchronization.
 
+Currently commented out for submission.
+
 ### Code Change Attempts
 
 **Targeted issue:** Excessive thread-management overhead and synchronization cost during repeated forward passes.
