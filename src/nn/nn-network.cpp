@@ -681,9 +681,9 @@ void NnNetworkNodeSynchronizer::sync(NnUint segmentIndex, NnUint nThreads, NnUin
     bool canSampleDiagnostics = threadIndex == 0;
     
     static int syncCallCount = 0;
-    if (++syncCallCount % 500 == 0 && isRoot) {
-        fprintf(stderr, "DEBUG: sync called, segment=%d, label=%s, nSyncs=%u\n", segmentIndex, syncLabel.c_str(), segmentConfig->nSyncs);
-    }
+    // if (++syncCallCount % 500 == 0 && isRoot) {
+    //     fprintf(stderr, "DEBUG: sync called, segment=%d, label=%s, nSyncs=%u\n", segmentIndex, syncLabel.c_str(), segmentConfig->nSyncs);
+    // }
 
     for (NnUint syncIndex = 0; syncIndex < segmentConfig->nSyncs; syncIndex++) {
         NnSyncConfig *syncConfig = &segmentConfig->syncs[syncIndex];
