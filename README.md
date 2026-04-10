@@ -38,7 +38,7 @@ TCP buffer size tuning was also evaluated as a possible way to reduce transfer o
 
 **Targeted issue:** Suboptimal local compute performance on the target ARM hardware.
 
-More aggressive hardware-targeted compiler settings were evaluated to improve local compute performance. The final selected build configuration was:
+More aggressive hardware-targeted compiler settings were evaluated to improve local computer performance. The ARM Cortex-A76 performance cores have support for the dotprod extension, which enables the UDOT and SDOT integer dot product instructions. These insturctions allow the CPU to compute 4 multiply-accumulate operations in a single cycle, making them significantly more efficient that standard NEON SIMD for Q40 quantized matrix multiplication. Enabling dotprod effectively doubled evaluation throughput and improved prediction throughput by nearly 1.5 tok/s. We also used and tested other flag configurations to improve performance, and the final selected build configuration was: 
 
 ```make
 -mcpu=cortex-a76+fp16+dotprod -Ofast -flto -fomit-frame-pointer
@@ -50,7 +50,7 @@ This configuration delivered the best overall result among the tested builds and
 
 **Targeted issue:** Runtime instability on the root node when using dot-product acceleration.
 
-To ensure stable execution with hardware dot-product support enabled, the root node CPU frequency was capped at 1992 MHz based on empirical stability testing.
+Enabling dotprod at the default 2.4GHz clock frequency caused the head node (rock0) to crash with a hard hardware reset (no kernel panic or error message, just an immediate reboot). Through systematic frequency testing, we identified that rock0's cannot sustain dotprod workloads above 1992MHz, while worker nodes remained stable at all frequencies. So we capped the root node CPU frequency to 1992MHz.  
 
 ### Configuration Sweeps
 
