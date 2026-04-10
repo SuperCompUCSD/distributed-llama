@@ -9,53 +9,53 @@
 #include "app.hpp"
 #include <stdexcept>
 #include <cmath>
-#include <string>
-#include <sys/stat.h>
-#include <sys/types.h>
+// #include <string>
+// #include <sys/stat.h>
+// #include <sys/types.h>
 
-static bool ensureDir(const char *path) {
-    struct stat st;
-    if (stat(path, &st) == 0)
-        return S_ISDIR(st.st_mode);
-    return mkdir(path, 0755) == 0;
-}
+// static bool ensureDir(const char *path) {
+//     struct stat st;
+//     if (stat(path, &st) == 0)
+//         return S_ISDIR(st.st_mode);
+//     return mkdir(path, 0755) == 0;
+// }
 
-static std::string basenameFromPath(const char *path) {
-    if (path == nullptr || path[0] == '\0')
-        return "unknown";
+// static std::string basenameFromPath(const char *path) {
+//     if (path == nullptr || path[0] == '\0')
+//         return "unknown";
 
-    const char *lastSlash = std::strrchr(path, '/');
-    const char *name = lastSlash == nullptr ? path : (lastSlash + 1);
-    return std::string(name);
-}
+//     const char *lastSlash = std::strrchr(path, '/');
+//     const char *name = lastSlash == nullptr ? path : (lastSlash + 1);
+//     return std::string(name);
+// }
 
-static std::string sanitizeLabel(const std::string &value) {
-    std::string out;
-    out.reserve(value.size());
-    for (size_t i = 0; i < value.size(); i++) {
-        char c = value[i];
-        bool isDigit = c >= '0' && c <= '9';
-        bool isLower = c >= 'a' && c <= 'z';
-        bool isUpper = c >= 'A' && c <= 'Z';
-        if (isDigit || isLower || isUpper || c == '-' || c == '_')
-            out.push_back(c);
-        else
-            out.push_back('_');
-    }
-    if (out.empty())
-        return "unknown";
-    return out;
-}
+// static std::string sanitizeLabel(const std::string &value) {
+//     std::string out;
+//     out.reserve(value.size());
+//     for (size_t i = 0; i < value.size(); i++) {
+//         char c = value[i];
+//         bool isDigit = c >= '0' && c <= '9';
+//         bool isLower = c >= 'a' && c <= 'z';
+//         bool isUpper = c >= 'A' && c <= 'Z';
+//         if (isDigit || isLower || isUpper || c == '-' || c == '_')
+//             out.push_back(c);
+//         else
+//             out.push_back('_');
+//     }
+//     if (out.empty())
+//         return "unknown";
+//     return out;
+// }
 
-static const char *floatTypeToLabel(NnFloatType syncType) {
-    switch (syncType) {
-        case F_32: return "f32";
-        case F_16: return "f16";
-        case F_Q40: return "q40";
-        case F_Q80: return "q80";
-        default: return "unknown";
-    }
-}
+// static const char *floatTypeToLabel(NnFloatType syncType) {
+//     switch (syncType) {
+//         case F_32: return "f32";
+//         case F_16: return "f16";
+//         case F_Q40: return "q40";
+//         case F_Q80: return "q80";
+//         default: return "unknown";
+//     }
+// }
 
 static void inference(AppInferenceContext *context) {
     if (context->args->prompt == nullptr)
@@ -79,7 +79,7 @@ static void inference(AppInferenceContext *context) {
     NnSize recvBytes = 0;
     NnUint evalTotalTime = 0;
     NnUint predTotalTime = 0;
-    std::chrono::steady_clock::time_point runStart = std::chrono::steady_clock::now();
+    // std::chrono::steady_clock::time_point runStart = std::chrono::steady_clock::now();
 
     int token = inputTokens[pos];
     printf("%s\n", context->args->prompt);
@@ -112,7 +112,7 @@ static void inference(AppInferenceContext *context) {
             sentBytes / 1024,
             recvBytes / 1024,
             batchSize);
-        context->executor->printLastForwardHotspots(3);
+        // context->executor->printLastForwardHotspots(3);
         evalTotalTime += evalTime + syncTime;
     }
 
@@ -121,7 +121,9 @@ static void inference(AppInferenceContext *context) {
     context->inference->setBatchSize(1);
     context->tokenizer->resetDecoder();
 
-    const NnUint maxPos = std::min(context->header->seqLen, context->args->steps);
+    const NnUint maxPos = context->header->seqLen < context->args->steps
+        ? context->header->seqLen
+        : context->args->steps;
     for (; pos < maxPos; pos++) {
         context->inference->setPosition(pos);
         context->inference->setToken(0, token);
@@ -142,12 +144,12 @@ static void inference(AppInferenceContext *context) {
             sentBytes / 1024,
             recvBytes / 1024,
             piece == nullptr ? "~" : piece);
-        context->executor->printLastForwardHotspots(3);
+        // context->executor->printLastForwardHotspots(3);
         fflush(stdout);
         predTotalTime += predTime + syncTime;
     }
 
-    context->executor->printTimingDistributions();
+    // context->executor->printTimingDistributions();
 
     NnUint nEvalTokens = nInputTokens - 1;
     NnUint nPredTokens = pos - nEvalTokens;
@@ -167,78 +169,78 @@ static void inference(AppInferenceContext *context) {
         predTotalTimeMs / ((float) nPredTokens));
 
     // Persist only end-of-run summaries to a dedicated run folder.
-    auto now = std::chrono::system_clock::now();
-    std::time_t nowTimeT = std::chrono::system_clock::to_time_t(now);
-    std::tm localTime = *std::localtime(&nowTimeT);
-    auto msPart = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+//     auto now = std::chrono::system_clock::now();
+//     std::time_t nowTimeT = std::chrono::system_clock::to_time_t(now);
+//     std::tm localTime = *std::localtime(&nowTimeT);
+//     auto msPart = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
 
-    char timestamp[40];
-    std::strftime(timestamp, sizeof(timestamp), "%Y%m%d-%H%M%S", &localTime);
-    std::snprintf(timestamp + std::strlen(timestamp), sizeof(timestamp) - std::strlen(timestamp), "-%03lld", (long long)msPart.count());
+//     char timestamp[40];
+//     std::strftime(timestamp, sizeof(timestamp), "%Y%m%d-%H%M%S", &localTime);
+//     std::snprintf(timestamp + std::strlen(timestamp), sizeof(timestamp) - std::strlen(timestamp), "-%03lld", (long long)msPart.count());
 
-    std::string modelName = sanitizeLabel(basenameFromPath(context->args->modelPath));
-    std::string runLabel = std::string("run-") + timestamp +
-        "_m-" + modelName +
-        "_seq-" + std::to_string(context->header->seqLen) +
-        "_t-" + std::to_string(context->args->nThreads) +
-        "_b-" + std::to_string(context->args->nBatches) +
-        "_w-" + std::to_string(context->args->nWorkers) +
-        "_s-" + floatTypeToLabel(context->args->syncType) +
-        "_chunk-" + std::to_string(MAX_CHUNK_SIZE);
+//     std::string modelName = sanitizeLabel(basenameFromPath(context->args->modelPath));
+//     std::string runLabel = std::string("run-") + timestamp +
+//         "_m-" + modelName +
+//         "_seq-" + std::to_string(context->header->seqLen) +
+//         "_t-" + std::to_string(context->args->nThreads) +
+//         "_b-" + std::to_string(context->args->nBatches) +
+//         "_w-" + std::to_string(context->args->nWorkers) +
+//         "_s-" + floatTypeToLabel(context->args->syncType) +
+//         "_chunk-" + std::to_string(MAX_CHUNK_SIZE);
 
-    std::string logsRoot = "logs";
-    std::string runDir = logsRoot + "/" + runLabel;
+//     std::string logsRoot = "logs";
+//     std::string runDir = logsRoot + "/" + runLabel;
 
-    if (ensureDir(logsRoot.c_str()) && ensureDir(runDir.c_str())) {
-        std::string summaryName = std::string("summary_") +
-            "seq" + std::to_string(context->header->seqLen) +
-            "t" + std::to_string(context->args->nThreads) +
-            "_b" + std::to_string(context->args->nBatches) +
-            "_w" + std::to_string(context->args->nWorkers) +
-            "_sync-" + floatTypeToLabel(context->args->syncType) +
-            "_chunk-" + std::to_string(MAX_CHUNK_SIZE) +
-            "_" + timestamp + ".log";
-        std::string summaryPath = runDir + "/" + summaryName;
+//     if (ensureDir(logsRoot.c_str()) && ensureDir(runDir.c_str())) {
+//         std::string summaryName = std::string("summary_") +
+//             "seq" + std::to_string(context->header->seqLen) +
+//             "t" + std::to_string(context->args->nThreads) +
+//             "_b" + std::to_string(context->args->nBatches) +
+//             "_w" + std::to_string(context->args->nWorkers) +
+//             "_sync-" + floatTypeToLabel(context->args->syncType) +
+//             "_chunk-" + std::to_string(MAX_CHUNK_SIZE) +
+//             "_" + timestamp + ".log";
+//         std::string summaryPath = runDir + "/" + summaryName;
 
-        FILE *fp = std::fopen(summaryPath.c_str(), "w");
-        if (fp != nullptr) {
-            auto runDurationUs = std::chrono::duration_cast<std::chrono::microseconds>(
-                std::chrono::steady_clock::now() - runStart
-            ).count();
-            float runDurationMs = runDurationUs / 1000.0f;
+//         FILE *fp = std::fopen(summaryPath.c_str(), "w");
+//         if (fp != nullptr) {
+//             auto runDurationUs = std::chrono::duration_cast<std::chrono::microseconds>(
+//                 std::chrono::steady_clock::now() - runStart
+//             ).count();
+//             float runDurationMs = runDurationUs / 1000.0f;
 
-            std::fprintf(fp, "run_timestamp=%s\n", timestamp);
-            std::fprintf(fp, "mode=inference\n");
-            std::fprintf(fp, "model=%s\n", context->args->modelPath == nullptr ? "" : context->args->modelPath);
-            std::fprintf(fp, "tokenizer=%s\n", context->args->tokenizerPath == nullptr ? "" : context->args->tokenizerPath);
-            std::fprintf(fp, "threads=%u\n", context->args->nThreads);
-            std::fprintf(fp, "batches=%u\n", context->args->nBatches);
-            std::fprintf(fp, "workers=%u\n", context->args->nWorkers);
-            std::fprintf(fp, "steps=%u\n", context->args->steps);
-            std::fprintf(fp, "seq_len=%u\n", context->header->seqLen);
-            std::fprintf(fp, "chunk_size=%u\n", (unsigned int)MAX_CHUNK_SIZE);
-            std::fprintf(fp, "sync_type=%s\n", floatTypeToLabel(context->args->syncType));
-            std::fprintf(fp, "prompt_tokens=%u\n", nEvalTokens);
-            std::fprintf(fp, "eval_tokens=%u\n", nEvalTokens);
-            std::fprintf(fp, "pred_tokens=%u\n", nPredTokens);
-            std::fprintf(fp, "eval_total_ms=%.2f\n", evalTotalTimeMs);
-            std::fprintf(fp, "pred_total_ms=%.2f\n", predTotalTimeMs);
-            std::fprintf(fp, "eval_tokens_per_s=%.2f\n", (nEvalTokens * 1000) / evalTotalTimeMs);
-            std::fprintf(fp, "pred_tokens_per_s=%.2f\n", (nPredTokens * 1000) / predTotalTimeMs);
-            std::fprintf(fp, "eval_ms_per_tok=%.2f\n", evalTotalTimeMs / ((float)nEvalTokens));
-            std::fprintf(fp, "pred_ms_per_tok=%.2f\n", predTotalTimeMs / ((float)nPredTokens));
-            std::fprintf(fp, "sent_kb=%zu\n", sentBytes / 1024);
-            std::fprintf(fp, "recv_kb=%zu\n", recvBytes / 1024);
-            std::fprintf(fp, "run_total_ms=%.2f\n", runDurationMs);
+//             std::fprintf(fp, "run_timestamp=%s\n", timestamp);
+//             std::fprintf(fp, "mode=inference\n");
+//             std::fprintf(fp, "model=%s\n", context->args->modelPath == nullptr ? "" : context->args->modelPath);
+//             std::fprintf(fp, "tokenizer=%s\n", context->args->tokenizerPath == nullptr ? "" : context->args->tokenizerPath);
+//             std::fprintf(fp, "threads=%u\n", context->args->nThreads);
+//             std::fprintf(fp, "batches=%u\n", context->args->nBatches);
+//             std::fprintf(fp, "workers=%u\n", context->args->nWorkers);
+//             std::fprintf(fp, "steps=%u\n", context->args->steps);
+//             std::fprintf(fp, "seq_len=%u\n", context->header->seqLen);
+//             std::fprintf(fp, "chunk_size=%u\n", (unsigned int)MAX_CHUNK_SIZE);
+//             std::fprintf(fp, "sync_type=%s\n", floatTypeToLabel(context->args->syncType));
+//             std::fprintf(fp, "prompt_tokens=%u\n", nEvalTokens);
+//             std::fprintf(fp, "eval_tokens=%u\n", nEvalTokens);
+//             std::fprintf(fp, "pred_tokens=%u\n", nPredTokens);
+//             std::fprintf(fp, "eval_total_ms=%.2f\n", evalTotalTimeMs);
+//             std::fprintf(fp, "pred_total_ms=%.2f\n", predTotalTimeMs);
+//             std::fprintf(fp, "eval_tokens_per_s=%.2f\n", (nEvalTokens * 1000) / evalTotalTimeMs);
+//             std::fprintf(fp, "pred_tokens_per_s=%.2f\n", (nPredTokens * 1000) / predTotalTimeMs);
+//             std::fprintf(fp, "eval_ms_per_tok=%.2f\n", evalTotalTimeMs / ((float)nEvalTokens));
+//             std::fprintf(fp, "pred_ms_per_tok=%.2f\n", predTotalTimeMs / ((float)nPredTokens));
+//             std::fprintf(fp, "sent_kb=%zu\n", sentBytes / 1024);
+//             std::fprintf(fp, "recv_kb=%zu\n", recvBytes / 1024);
+//             std::fprintf(fp, "run_total_ms=%.2f\n", runDurationMs);
 
-            std::fclose(fp);
-            std::printf("📝 Run summary saved: %s\n", summaryPath.c_str());
-        } else {
-            std::printf("⚠️ Could not write run summary file: %s\n", summaryPath.c_str());
-        }
-    } else {
-        std::printf("⚠️ Could not create logs directory for run summaries\n");
-    }
+//             std::fclose(fp);
+//             std::printf("📝 Run summary saved: %s\n", summaryPath.c_str());
+//         } else {
+//             std::printf("⚠️ Could not write run summary file: %s\n", summaryPath.c_str());
+//         }
+//     } else {
+//         std::printf("⚠️ Could not create logs directory for run summaries\n");
+//     }
 }
 
 static NnUint readStdin(const char *guide, char *buffer, NnUint size) {
@@ -283,7 +285,7 @@ static void perplexity(AppInferenceContext *context) {
         int targetToken = inputTokens[pos + 1];
         float prob = logits[targetToken];
 
-        totalLogProb += std::log(std::max(prob, 1e-30f));
+        totalLogProb += std::log(prob > 1e-30f ? prob : 1e-30f);
         printf("%5d / %d, prob=%f\n", pos + 1, nInputTokens - 1, prob);
     }
 

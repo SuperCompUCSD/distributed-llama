@@ -1,7 +1,8 @@
 #include <cassert>
 #include <cstring>
-#include <algorithm>
-#include <limits>
+#include <string>
+// #include <algorithm>
+// #include <limits>
 #include "nn-executor.hpp"
 
 void NnFakeNodeSynchronizer::sync(NnUint segmentIndex, NnUint nThreads, NnUint threadIndex) {
@@ -45,7 +46,8 @@ NnExecutorException::NnExecutorException(const std::string message)
 {}
 
 NnExecutor::NnExecutor(NnNetConfig *netConfig, NnNodeConfig *nodeConfig, std::vector<NnExecutorDevice> *devices, NnNetExecution *netExecution, NnNodeSynchronizer *synchronizer, bool benchmark)
-    : segments(nodeConfig->nSegments), steps(), stepLabels(), lastStepTime(), stepCount(), stepTotalTime(), stepMinTime(), stepMaxTime(), stepSamples(), nForwards(0), profilingEnabled(benchmark)
+    : segments(nodeConfig->nSegments), steps()
+    // : segments(nodeConfig->nSegments), steps(), stepLabels(), lastStepTime(), stepCount(), stepTotalTime(), stepMinTime(), stepMaxTime(), stepSamples(), nForwards(0), profilingEnabled(benchmark)
 {
     NnUint maxNThreads = 0;
     for (NnExecutorDevice &d : *devices) {
@@ -87,27 +89,28 @@ NnExecutor::NnExecutor(NnNetConfig *netConfig, NnNodeConfig *nodeConfig, std::ve
 
     steps.shrink_to_fit();
 
-    stepLabels.resize(steps.size());
-    lastStepTime.resize(steps.size(), 0);
-    stepCount.resize(steps.size(), 0);
-    stepTotalTime.resize(steps.size(), 0);
-    stepMinTime.resize(steps.size(), std::numeric_limits<NnUint>::max());
-    stepMaxTime.resize(steps.size(), 0);
-    stepSamples.resize(steps.size());
-    for (NnUint i = 0; i < (NnUint)steps.size(); i++)
-        stepLabels[i] = formatStepLabel(steps[i]);
+    // stepLabels.resize(steps.size());
+    // lastStepTime.resize(steps.size(), 0);
+    // stepCount.resize(steps.size(), 0);
+    // stepTotalTime.resize(steps.size(), 0);
+    // stepMinTime.resize(steps.size(), std::numeric_limits<NnUint>::max());
+    // stepMaxTime.resize(steps.size(), 0);
+    // stepSamples.resize(steps.size());
+    // for (NnUint i = 0; i < (NnUint)steps.size(); i++)
+    //     stepLabels[i] = formatStepLabel(steps[i]);
 
     context.nThreads = netExecution->nThreads;
     context.synchronizer = synchronizer;
     context.nSteps = (NnUint)steps.size();
     context.steps = steps.data();
-    context.lastStepTime = lastStepTime.data();
-    context.stepCount = stepCount.data();
-    context.stepTotalTime = stepTotalTime.data();
-    context.stepMinTime = stepMinTime.data();
-    context.stepMaxTime = stepMaxTime.data();
-    context.stepSamples = stepSamples.data();
-    if (profilingEnabled)
+    // context.lastStepTime = lastStepTime.data();
+    // context.stepCount = stepCount.data();
+    // context.stepTotalTime = stepTotalTime.data();
+    // context.stepMinTime = stepMinTime.data();
+    // context.stepMaxTime = stepMaxTime.data();
+    // context.stepSamples = stepSamples.data();
+    // if (profilingEnabled)
+    if (benchmark)
         context.timer = new Timer();
     else
         context.timer = nullptr;
@@ -177,14 +180,14 @@ static inline void *executorThreadHandler(void *arg) {
             if (context->timer != nullptr) {
                 NnUint time = context->timer->elapsedMicroseconds();
                 context->totalTime[step->type] += time;
-                context->lastStepTime[currentStepIndex] = time;
-                context->stepCount[currentStepIndex] += 1;
-                context->stepTotalTime[currentStepIndex] += time;
-                if (time < context->stepMinTime[currentStepIndex])
-                    context->stepMinTime[currentStepIndex] = time;
-                if (time > context->stepMaxTime[currentStepIndex])
-                    context->stepMaxTime[currentStepIndex] = time;
-                context->stepSamples[currentStepIndex].push_back(time);
+                // context->lastStepTime[currentStepIndex] = time;
+                // context->stepCount[currentStepIndex] += 1;
+                // context->stepTotalTime[currentStepIndex] += time;
+                // if (time < context->stepMinTime[currentStepIndex])
+                //     context->stepMinTime[currentStepIndex] = time;
+                // if (time > context->stepMaxTime[currentStepIndex])
+                //     context->stepMaxTime[currentStepIndex] = time;
+                // context->stepSamples[currentStepIndex].push_back(time);
                 context->timer->reset();
             }
 
@@ -210,9 +213,9 @@ void NnExecutor::forward() {
     context.batchSize = netExecution->batchSize;
 
     if (context.timer != nullptr) {
-        nForwards += 1;
+        // nForwards += 1;
         std::memset(context.totalTime, 0, sizeof(context.totalTime));
-        std::memset(context.lastStepTime, 0, sizeof(NnUint) * context.nSteps);
+        // std::memset(context.lastStepTime, 0, sizeof(NnUint) * context.nSteps);
         context.timer->reset();
     }
 
@@ -234,112 +237,112 @@ NnUint NnExecutor::getTotalTime(NnExecutorStepType type) {
     return context.totalTime[type];
 }
 
-std::string NnExecutor::formatStepLabel(const NnExecutorStep &step) const {
-    if (step.type == STEP_EXECUTE_OP) {
-        assert(step.opConfig != nullptr);
-        if (std::strncmp(step.opConfig->name, "block_", 6) == 0)
-            return "L" + std::to_string(step.opConfig->index) + ":" + std::string(step.opConfig->name);
-        return std::string(step.opConfig->name);
-    }
+// std::string NnExecutor::formatStepLabel(const NnExecutorStep &step) const {
+//     if (step.type == STEP_EXECUTE_OP) {
+//         assert(step.opConfig != nullptr);
+//         if (std::strncmp(step.opConfig->name, "block_", 6) == 0)
+//             return "L" + std::to_string(step.opConfig->index) + ":" + std::string(step.opConfig->name);
+//         return std::string(step.opConfig->name);
+//     }
 
-    NnSegmentConfig *segmentConfig = &nodeConfig->segments[step.arg0];
-    if (segmentConfig->nOps > 0) {
-        NnOpConfig *opConfig = &segmentConfig->ops[0];
-        if (std::strncmp(opConfig->name, "block_", 6) == 0)
-            return "SYNC L" + std::to_string(opConfig->index) + ":" + std::string(opConfig->name);
-        return "SYNC " + std::string(opConfig->name);
-    }
-    return "SYNC segment_" + std::to_string(step.arg0);
-}
+//     NnSegmentConfig *segmentConfig = &nodeConfig->segments[step.arg0];
+//     if (segmentConfig->nOps > 0) {
+//         NnOpConfig *opConfig = &segmentConfig->ops[0];
+//         if (std::strncmp(opConfig->name, "block_", 6) == 0)
+//             return "SYNC L" + std::to_string(opConfig->index) + ":" + std::string(opConfig->name);
+//         return "SYNC " + std::string(opConfig->name);
+//     }
+//     return "SYNC segment_" + std::to_string(step.arg0);
+// }
 
-void NnExecutor::printLastForwardHotspots(NnUint topK) const {
-    if (context.timer == nullptr || context.nSteps == 0 || topK == 0)
-        return;
+// void NnExecutor::printLastForwardHotspots(NnUint topK) const {
+//     if (context.timer == nullptr || context.nSteps == 0 || topK == 0)
+//         return;
 
-    std::vector<std::pair<NnUint, NnUint>> compute;
-    std::vector<std::pair<NnUint, NnUint>> sync;
-    compute.reserve(context.nSteps);
-    sync.reserve(context.nSteps);
+//     std::vector<std::pair<NnUint, NnUint>> compute;
+//     std::vector<std::pair<NnUint, NnUint>> sync;
+//     compute.reserve(context.nSteps);
+//     sync.reserve(context.nSteps);
 
-    for (NnUint i = 0; i < context.nSteps; i++) {
-        NnUint us = lastStepTime[i];
-        if (us == 0)
-            continue;
-        if (steps[i].type == STEP_EXECUTE_OP)
-            compute.push_back({us, i});
-        else
-            sync.push_back({us, i});
-    }
+//     for (NnUint i = 0; i < context.nSteps; i++) {
+//         NnUint us = lastStepTime[i];
+//         if (us == 0)
+//             continue;
+//         if (steps[i].type == STEP_EXECUTE_OP)
+//             compute.push_back({us, i});
+//         else
+//             sync.push_back({us, i});
+//     }
 
-    auto byTimeDesc = [](const std::pair<NnUint, NnUint> &a, const std::pair<NnUint, NnUint> &b) {
-        return a.first > b.first;
-    };
-    std::sort(compute.begin(), compute.end(), byTimeDesc);
-    std::sort(sync.begin(), sync.end(), byTimeDesc);
+//     auto byTimeDesc = [](const std::pair<NnUint, NnUint> &a, const std::pair<NnUint, NnUint> &b) {
+//         return a.first > b.first;
+//     };
+//     std::sort(compute.begin(), compute.end(), byTimeDesc);
+//     std::sort(sync.begin(), sync.end(), byTimeDesc);
 
-    NnUint computeCount = std::min(topK, (NnUint)compute.size());
-    NnUint syncCount = std::min(topK, (NnUint)sync.size());
+//     NnUint computeCount = std::min(topK, (NnUint)compute.size());
+//     NnUint syncCount = std::min(topK, (NnUint)sync.size());
 
-    if (computeCount > 0) {
-        printf("🧩 SlowCompute");
-        for (NnUint i = 0; i < computeCount; i++) {
-            NnUint us = compute[i].first;
-            NnUint stepIndex = compute[i].second;
-            printf(" | %s=%4.2fms", stepLabels[stepIndex].c_str(), us / 1000.0f);
-        }
-        printf("\n");
-    }
+//     if (computeCount > 0) {
+//         printf("🧩 SlowCompute");
+//         for (NnUint i = 0; i < computeCount; i++) {
+//             NnUint us = compute[i].first;
+//             NnUint stepIndex = compute[i].second;
+//             printf(" | %s=%4.2fms", stepLabels[stepIndex].c_str(), us / 1000.0f);
+//         }
+//         printf("\n");
+//     }
 
-    if (syncCount > 0) {
-        printf("🔗 SlowSync   ");
-        for (NnUint i = 0; i < syncCount; i++) {
-            NnUint us = sync[i].first;
-            NnUint stepIndex = sync[i].second;
-            printf(" | %s=%4.2fms", stepLabels[stepIndex].c_str(), us / 1000.0f);
-        }
-        printf("\n");
-    }
-}
+//     if (syncCount > 0) {
+//         printf("🔗 SlowSync   ");
+//         for (NnUint i = 0; i < syncCount; i++) {
+//             NnUint us = sync[i].first;
+//             NnUint stepIndex = sync[i].second;
+//             printf(" | %s=%4.2fms", stepLabels[stepIndex].c_str(), us / 1000.0f);
+//         }
+//         printf("\n");
+//     }
+// }
 
-static NnUint pctl(const std::vector<NnUint> &values, float ratio) {
-    if (values.empty())
-        return 0;
-    std::vector<NnUint> sorted(values);
-    std::sort(sorted.begin(), sorted.end());
-    size_t index = (size_t)((sorted.size() - 1) * ratio);
-    return sorted[index];
-}
+// static NnUint pctl(const std::vector<NnUint> &values, float ratio) {
+//     if (values.empty())
+//         return 0;
+//     std::vector<NnUint> sorted(values);
+//     std::sort(sorted.begin(), sorted.end());
+//     size_t index = (size_t)((sorted.size() - 1) * ratio);
+//     return sorted[index];
+// }
 
-void NnExecutor::printStepDistribution(const char *title, bool includeSync) const {
-    printf("%s\n", title);
-    printf("%-45s %8s %8s %8s %8s %8s\n", "Stage", "avg(ms)", "p50", "p95", "max", "count");
-    for (NnUint i = 0; i < context.nSteps; i++) {
-        bool isSync = steps[i].type == STEP_SYNC_NODES;
-        if (isSync != includeSync)
-            continue;
+// void NnExecutor::printStepDistribution(const char *title, bool includeSync) const {
+//     printf("%s\n", title);
+//     printf("%-45s %8s %8s %8s %8s %8s\n", "Stage", "avg(ms)", "p50", "p95", "max", "count");
+//     for (NnUint i = 0; i < context.nSteps; i++) {
+//         bool isSync = steps[i].type == STEP_SYNC_NODES;
+//         if (isSync != includeSync)
+//             continue;
 
-        NnUint count = stepCount[i];
-        if (count == 0)
-            continue;
+//         NnUint count = stepCount[i];
+//         if (count == 0)
+//             continue;
 
-        float avg = (float)stepTotalTime[i] / (float)count / 1000.0f;
-        float p50 = pctl(stepSamples[i], 0.50f) / 1000.0f;
-        float p95 = pctl(stepSamples[i], 0.95f) / 1000.0f;
-        float max = stepMaxTime[i] / 1000.0f;
-        printf("%-45s %8.3f %8.3f %8.3f %8.3f %8u\n",
-            stepLabels[i].c_str(),
-            avg,
-            p50,
-            p95,
-            max,
-            count);
-    }
-}
+//         float avg = (float)stepTotalTime[i] / (float)count / 1000.0f;
+//         float p50 = pctl(stepSamples[i], 0.50f) / 1000.0f;
+//         float p95 = pctl(stepSamples[i], 0.95f) / 1000.0f;
+//         float max = stepMaxTime[i] / 1000.0f;
+//         printf("%-45s %8.3f %8.3f %8.3f %8.3f %8u\n",
+//             stepLabels[i].c_str(),
+//             avg,
+//             p50,
+//             p95,
+//             max,
+//             count);
+//     }
+// }
 
-void NnExecutor::printTimingDistributions() const {
-    if (context.timer == nullptr)
-        return;
-    printf("\n📊 Timing distribution across %u forward passes\n", nForwards);
-    printStepDistribution("Compute stages", false);
-    printStepDistribution("Sync stages", true);
-}
+// void NnExecutor::printTimingDistributions() const {
+//     if (context.timer == nullptr)
+//         return;
+//     printf("\n📊 Timing distribution across %u forward passes\n", nForwards);
+//     printStepDistribution("Compute stages", false);
+//     printStepDistribution("Sync stages", true);
+// }
